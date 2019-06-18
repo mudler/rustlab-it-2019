@@ -51,7 +51,7 @@
 
 - The language, and its compilers, have nearly nothing to prevent you to make **mistakes** that lead to memory **corruption**
 	- Even if you are careful the odds are **always** non-zero
-	
+
 - You **pay** for the abstractions
 	- The boilerplate code you have to write is large
 		- *preprocessor* macros can **hide** some, and even more effectively **hide bugs** within it!
@@ -75,7 +75,7 @@
 	- Rust does **not** save you from logic mistakes
 	- There is always a cost-opportunity tradeoff
 
---- 
+---
 # From C to Rust
 
 Ideally you'd like to use the best of both words:
@@ -90,8 +90,7 @@ Ideally you'd like to use the best of both words:
 
 - Replace a small internal component from a large C project (e.g. [librsvg](https://gitlab.gnome.org/GNOME/librsvg))
 - Share the **assembly-optimized** kernels across projects (e.g. [ring](https://github.com/briansmith/ring) or [rav1e](https://github.com/xiph/rav1e))
-- Use a rust library from your C/Go [production pipeline](https://medium.com/vimeo-engineering-blog/behind-the-scenes-of-av1-at-vimeo-a2115973314b) ([crav1e](https://github.com/lu-zero/crav1e) at [Vimeo](https://press.vimeo.com/61553-vimeo-introduces-support-for-royalty-free-video-codec-av1)
-  - **BONUS TRACK**: Use rust to write your system __[libc](https://gitlab.redox-os.org/redox-os/relibc)__ since your [whole operating system](https://redox-os.org) is written in Rust already.
+- Use a rust library from your C/Go [production pipeline](https://medium.com/vimeo-engineering-blog/behind-the-scenes-of-av1-at-vimeo-a2115973314b) ([crav1e](https://github.com/lu-zero/crav1e) at [Vimeo](https://press.vimeo.com/61553-vimeo-introduces-support-for-royalty-free-video-codec-av1))
 ---
 
 
@@ -110,7 +109,7 @@ Ideally you'd like to use the best of both words:
 	- The default **Rust** memory representation is highly optimized.
 	- You can tell the compiler to be wasteful and have structs
 - `extern "C"` & `#[no_mangle]` for our functions
-	- **Rust** a specific [symbol mangling strategy](https://github.com/rust-lang/rfcs/pull/2603) to avoid collisions.
+	- **Rust** has a specific [symbol mangling strategy](https://github.com/rust-lang/rfcs/pull/2603) to avoid collisions.
 	- You can tell the compiler to not do that (and be [more precise](https://doc.rust-lang.org/reference/items/external-blocks.html) on what to do when the need arises).
 - Use the [std::os::raw](https://doc.rust-lang.org/std/os/raw/index.html) and [std::ffi](https://doc.rust-lang.org/std/ffi/index.html) type definitions (and the [libc crate](https://docs.rs/libc/0.2.58/libc/) when needed)
 ---
@@ -154,51 +153,3 @@ $ cc main.c -L. -llib -o example1
 $ ./example1
 Hello from Rust!
 ```
----
-# Using C-compatible code in Rust
-## Example 2 - hello C
-``` c
-// lib.c
-#include <stdio.h>
-char *hi = "from C!";
-
-void hello_c(void) {
-    printf("Hello ");
-    fflush(stdout);
-}
-```
----
-# Using C-compatible code in Rust
-## Example 2 - hello C
-``` rust
-// main.rs
-use std::ffi::CStr;
-use std::os::raw::c_char;
-
-extern "C" {
-    static hi: *const c_char;
-    unsafe fn hello_c();
-}
-
-fn main() {
-    unsafe { 
-        hello_c();
-        let from_c = CStr::from_ptr(hi);
-        println!("{}", from_c.to_string_lossy());
-    }
-}
-```
----
-# Using C-compatible code in Rust
-## Example 2 - hello C
-``` sh
-# Produce liblib.a
-$ cc lib.c -c -o lib.o && ar rcs liblib.a lib.o
-
-# Produce the binary
-$ rustc --crate-type bin main.rs -L . -l static=lib
-
-$ ./main
-Hello from C!
-```
----
